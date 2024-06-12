@@ -1,0 +1,8 @@
+[submodule "Submodules/Gizmo.DAL"]
+	path = Submodules/Gizmo.DAL
+	url = https://github.com/GAMP/Gizmo.DAL
+	branch = dev
+[submodule "Submodules/Gizmo.DAL.Entities"]
+	path = Submodules/Gizmo.DAL.Entities
+	url = https://github.com/GAMP/Gizmo.DAL.Entities
+	branch = dev
