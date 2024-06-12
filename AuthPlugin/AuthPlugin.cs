@@ -21,14 +21,20 @@ namespace AuthPlugin
             if (string.IsNullOrWhiteSpace(username?.ToString()) || string.IsNullOrWhiteSpace(password?.ToString()))
                 return new AuthResult(LoginResult.InvalidCredentials);
 
+            //block user names with white spaces
+            if(username.ToString()!.ToCharArray().Any(c=>char.IsWhiteSpace(c)))
+                return new AuthResult(LoginResult.InvalidParameters);
 
             using (var httpClient = GetHttpClient())
             {
-
+                //make an external api call and determine if user credentials are correct
             }
 
             //try to get existing or create a new user, if the function returns null then we cant proceed since 
             //we could not create a local user
+
+            //NOTE : this function could receive more parameters such as user info First,Last names e.t.c
+            //those values could be used to update local user or used when creating a new one
             var localUserEntity = GetOrCreateLocalUser(username.ToString()!);
             if (localUserEntity == null)
                 return new AuthResult(LoginResult.Failed);           
@@ -52,7 +58,12 @@ namespace AuthPlugin
             return new HttpClient();
         }
 
-        private Gizmo.DAL.Entities.UserMember? GetOrCreateLocalUser(string userName)
+        /// <summary>
+        /// Gets or creates user with specified username.
+        /// </summary>
+        /// <param name="username">Username.</param>
+        /// <returns>User entity or null in case of error.</returns>
+        private Gizmo.DAL.Entities.UserMember? GetOrCreateLocalUser(string username)
         {
             try
             {
@@ -61,17 +72,19 @@ namespace AuthPlugin
                     var userDbSet = (DbSet<Gizmo.DAL.Entities.UserMember>)dbContext.QueryableSet<Gizmo.DAL.Entities.UserMember>();
                     var userGroupDbSet = (DbSet<Gizmo.DAL.Entities.UserGroup>)dbContext.QueryableSet<Gizmo.DAL.Entities.UserGroup>();
 
+                    //database transaction might be overkill here, it can be removed. The goal is to ensure no two users being created with same username at same time BUT it might not be a problem
+                    //since it wont be allowed on the database level so the only potential outcome is one of the users getting an login error once.
                     using (var trx = dbContext.BeginTransaction(System.Data.IsolationLevel.Serializable))
                     {
                         //try to find local user by comparing the username
-                        var currentUser = userDbSet.Where(userMember => userMember.Username.ToLower() == userName.ToLower()).FirstOrDefault();
+                        var currentUser = userDbSet.Where(userMember => userMember.Username.ToLower() == username.ToLower()).FirstOrDefault();
 
+                        //if we failed to find a local user with specified username then we need to create a new one
                         if (currentUser == null)
                         {
-                            //we did not find an user match 
-                            //we will create a new local user
-                            //we will require an user group id since it is required for any user
+                            //we will need an user group id since it is required for any user
 
+                            //get the user group that is marked as default
                             var defaultUserGroupId = userGroupDbSet.Where(userGroup => userGroup.IsDefault).Select(userGroup => (int?)userGroup.Id).FirstOrDefault();
                             if (defaultUserGroupId == null)
                             {
@@ -89,7 +102,7 @@ namespace AuthPlugin
                             //create new user
                             currentUser = new Gizmo.DAL.Entities.UserMember()
                             {
-                                Username = userName,
+                                Username = username,
                                 UserGroupId = defaultUserGroupId.Value,
                             };
 
