@@ -6,3 +6,7 @@
 	path = Submodules/Gizmo.DAL.Entities
 	url = https://github.com/GAMP/Gizmo.DAL.Entities
 	branch = dev
+[submodule "Submodules/DataInterfaces"]
+	path = Submodules/DataInterfaces
+	url = https://github.com/GAMP/DataInterfaces
+	branch = dev
