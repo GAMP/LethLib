@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Gizmo Server": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Program Files\\NETProjects\\Gizmo Server\\GizmoService.exe",
+      "workingDirectory": "C:\\Program Files\\NETProjects\\Gizmo Server\\"
+    }
+  }
+}
