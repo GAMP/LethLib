@@ -9,7 +9,7 @@ namespace AuthPlugin
     {
         public override AuthResult Authenticate(IDictionary<string, object> authHeaders, IMessageDispatcher dispatcher)
         {
-            //check if required header kyes are set
+            //check if required header keys are set
             if (!authHeaders.ContainsKey("USERNAME") || !authHeaders.ContainsKey("PASSWORD"))
                 return new AuthResult(LoginResult.InvalidParameters);
 
@@ -17,12 +17,15 @@ namespace AuthPlugin
             authHeaders.TryGetValue("USERNAME", out var username);
             authHeaders.TryGetValue("PASSWORD", out var password);
 
+            //the keys might have been present in the auth headers but the value object might have null values
+
             //check if both passwords are not null and contains some value
             if (string.IsNullOrWhiteSpace(username?.ToString()) || string.IsNullOrWhiteSpace(password?.ToString()))
                 return new AuthResult(LoginResult.InvalidCredentials);
 
-            //block user names with white spaces
-            if(username.ToString()!.ToCharArray().Any(c=>char.IsWhiteSpace(c)))
+            //block user names with white spaces, this is only to protect us from username with white spaces coming from your own api
+            //TODO : other checks might also be needed such as illegal characters and such
+            if (username.ToString()!.ToCharArray().Any(c => char.IsWhiteSpace(c)))
                 return new AuthResult(LoginResult.InvalidParameters);
 
             using (var httpClient = GetHttpClient())
@@ -30,14 +33,13 @@ namespace AuthPlugin
                 //make an external api call and determine if user credentials are correct
             }
 
-            //try to get existing or create a new user, if the function returns null then we cant proceed since 
-            //we could not create a local user
+            //try to get existing or create a new user, if the function returns null then we cant proceed since we could not create a local user
 
             //NOTE : this function could receive more parameters such as user info First,Last names e.t.c
             //those values could be used to update local user or used when creating a new one
             var localUserEntity = GetOrCreateLocalUser(username.ToString()!);
             if (localUserEntity == null)
-                return new AuthResult(LoginResult.Failed);           
+                return new AuthResult(LoginResult.Failed);
 
             var userIdentity = new ClaimsUserIdentity(localUserEntity.Username, localUserEntity.Id, Gizmo.UserRoles.User);
 
@@ -106,6 +108,7 @@ namespace AuthPlugin
                                 UserGroupId = defaultUserGroupId.Value,
                             };
 
+                            //add the new user to db set, EF will pick that up and save it to database upon SaveChanges.
                             userDbSet.Add(currentUser);
                         }
 
@@ -123,7 +126,7 @@ namespace AuthPlugin
             catch
             {
                 //here we can only log the error, nothing else can be done
-                return null; 
+                return null;
             }
         }
 

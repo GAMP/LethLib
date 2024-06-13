@@ -42,8 +42,9 @@
 
 		<!--delete files-->
 		<Delete Files="@(FilesToDelete)" />
+		
 		<!--delete directories-->
-		<RemoveDir Directories="@(DirsToClean)" Condition="%(Filename) != 'wwwroot' and %(Filename) != 'static' " />
+		<RemoveDir Directories="@(DirsToClean)" />
 	</Target>
 
 </Project>
